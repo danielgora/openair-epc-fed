@@ -226,7 +226,7 @@ def Usage():
     print('python3 dsTestDeployTools.py --action=DeployCassandra')
     print('python3 dsTestDeployTools.py --action=DeployRedis --magmaPath=[path]')
     print('python3 dsTestDeployTools.py --action=DeployHSS --tag=[tag]')
-    print('python3 dsTestDeployTools.py --action=DeployMME --tag=[tag] --mmeVersion=[version]')
+    print('python3 dsTestDeployTools.py --action=DeployMME --tag=[tag] --mmeVersion=[version] --magmaPath=[path]')
     print('python3 dsTestDeployTools.py --action=DeploySPGWC --tag=[tag]')
     print('python3 dsTestDeployTools.py --action=DeploySPGWU --tag=[tag]')
     print('python3 dsTestDeployTools.py --action=RemoveAllContainers')
