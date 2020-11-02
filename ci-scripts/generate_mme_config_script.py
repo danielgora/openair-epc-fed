@@ -49,6 +49,13 @@ class mmeConfigGen():
 		self.magma = False
 
 	def GenerateMMEConfigurer(self):
+		# We cannot have S10 and S11 sharing the same interface and the same IP address since they are using the same port
+		useLoopBackForS10 = False
+		if not self.magma and (self.mme_s10_name == self.mme_s11_name) and (str(self.mme_s10_IP) == str(self.mme_s11_IP)):
+			print ('Using the same interface name and the same IP address for S11 and S10 is not allowed.')
+			print ('Starting a virtual interface on loopback for S10')
+			useLoopBackForS10 = True
+
 		tais = self.tai_list.split(',')
 		mme_conf_file = open('./mme.conf', 'w')
 		if not self.magma:
@@ -94,19 +101,15 @@ class mmeConfigGen():
 			mme_conf_file.write('    S1AP_OUTCOME_TIMER = 10;\n')
 			mme_conf_file.write('  };\n')
 			mme_conf_file.write('  GUMMEI_LIST = (\n')
-			mme_conf_file.write('    {MCC="'+self.mcc+'" ; MNC="'+self.mnc+
-													'"; MME_GID="'+self.mme_gid+'" ; MME_CODE="'+
-													self.mme_code+'";}\n')
+			mme_conf_file.write('    {MCC="'+self.mcc+'" ; MNC="'+self.mnc+ '"; MME_GID="'+self.mme_gid+'" ; MME_CODE="'+self.mme_code+'";}\n')
 			mme_conf_file.write('  );\n')
 			mme_conf_file.write('  TAI_LIST = (\n')
 			for tai in tais[ 0:len(tais)-1 ]:
 				tai_elmnts = tai.split(' ')
-				mme_conf_file.write('    {MCC="'+tai_elmnts[1]+'" ; MNC="'+tai_elmnts[2]+
-														'";  TAC = "'+ tai_elmnts[0] +'"; },\n')
+				mme_conf_file.write('    {MCC="'+tai_elmnts[1]+'" ; MNC="'+tai_elmnts[2] + '";  TAC = "'+ tai_elmnts[0] +'"; },\n')
 			tai = tais[len(tais) - 1]
 			tai_elmnts = tai.split(' ')
-			mme_conf_file.write('    {MCC="'+tai_elmnts[1]+'" ; MNC="'+tai_elmnts[2]+
-															'";  TAC = "'+ tai_elmnts[0] +'"; }\n')
+			mme_conf_file.write('    {MCC="'+tai_elmnts[1]+'" ; MNC="' + tai_elmnts[2]+ '";  TAC = "' + tai_elmnts[0] +'"; }\n')
 			mme_conf_file.write('  );\n')
 			mme_conf_file.write('  NAS :\n')
 			mme_conf_file.write('  {\n')
@@ -126,21 +129,19 @@ class mmeConfigGen():
 			mme_conf_file.write('  NETWORK_INTERFACES : \n')
 			mme_conf_file.write('  {\n')
 			mme_conf_file.write('    # MME binded interface for S1-C or S1-MME  communication (S1AP), can be ethernet interface, virtual ethernet interface, we dont advise wireless interfaces\n')
-			mme_conf_file.write('    MME_INTERFACE_NAME_FOR_S1_MME   = "'+
-													self.mme_s1c_name+'"; # YOUR NETWORK CONFIG HERE\n')
-			mme_conf_file.write('    MME_IPV4_ADDRESS_FOR_S1_MME     = "'+
-													self.mme_s1c_IP+'/24"; # CIDR, YOUR NETWORK CONFIG HERE\n')
+			mme_conf_file.write('    MME_INTERFACE_NAME_FOR_S1_MME   = "' + self.mme_s1c_name+'"; # YOUR NETWORK CONFIG HERE\n')
+			mme_conf_file.write('    MME_IPV4_ADDRESS_FOR_S1_MME     = "' + self.mme_s1c_IP+'/24"; # CIDR, YOUR NETWORK CONFIG HERE\n')
 			mme_conf_file.write('    # MME binded interface for S11 communication (GTPV2-C)\n')
-			mme_conf_file.write('    MME_INTERFACE_NAME_FOR_S11      = "'+
-													self.mme_s11_name+'"; # YOUR NETWORK CONFIG HERE\n')
-			mme_conf_file.write('    MME_IPV4_ADDRESS_FOR_S11        = "'+
-													str(self.mme_s11_IP)+'/24"; # CIDR, YOUR NETWORK CONFIG HERE\n')
+			mme_conf_file.write('    MME_INTERFACE_NAME_FOR_S11      = "' + self.mme_s11_name+'"; # YOUR NETWORK CONFIG HERE\n')
+			mme_conf_file.write('    MME_IPV4_ADDRESS_FOR_S11        = "' + str(self.mme_s11_IP)+'/24"; # CIDR, YOUR NETWORK CONFIG HERE\n')
 			mme_conf_file.write('    MME_PORT_FOR_S11                = 2123;# YOUR NETWORK CONFIG HERE\n')
 			mme_conf_file.write('    #S10 Interface\n')
-			mme_conf_file.write('    MME_INTERFACE_NAME_FOR_S10      = "'+
-													self.mme_s10_name+'"; # YOUR NETWORK CONFIG HERE\n')
-			mme_conf_file.write('    MME_IPV4_ADDRESS_FOR_S10        = "'+
-													self.mme_s10_IP+'/24"; # CIDR, YOUR NETWORK CONFIG HERE\n')
+			if useLoopBackForS10:
+				mme_conf_file.write('    MME_INTERFACE_NAME_FOR_S10      = "lo"; # YOUR NETWORK CONFIG HERE\n')
+				mme_conf_file.write('    MME_IPV4_ADDRESS_FOR_S10        = "127.0.0.10/24"; # CIDR, YOUR NETWORK CONFIG HERE\n')
+			else:
+				mme_conf_file.write('    MME_INTERFACE_NAME_FOR_S10      = "' + self.mme_s10_name+'"; # YOUR NETWORK CONFIG HERE\n')
+				mme_conf_file.write('    MME_IPV4_ADDRESS_FOR_S10        = "' + str(self.mme_s10_IP)+'/24"; # CIDR, YOUR NETWORK CONFIG HERE\n')
 			mme_conf_file.write('    MME_PORT_FOR_S10                = 2123; # YOUR NETWORK CONFIG HERE\n')
 			mme_conf_file.write('  };\n')
 			mme_conf_file.write('  LOGGING :\n')
@@ -174,19 +175,19 @@ class mmeConfigGen():
 				if tac != previous_tac:
 					tac_lb = tac % 256
 					tac_hb = tac // 256
-					mme_conf_file.write('    {ID="tac-lb' + str(format(tac_lb, '02x')) +
+					mme_conf_file.write('	{ID="tac-lb' + str(format(tac_lb, '02x')) +
 							'.tac-hb' + str(format(tac_hb, '02x')) +
 							'.tac.epc.mnc' + self.mnc +
 							'.mcc' + self.mcc +
 							'.3gppnetwork.org" ; SGW_IP_ADDRESS_FOR_S11="' +
 							str(self.spgwc0_s11_IP) + '";},\n')
 					previous_tac = tac
-			tai = tais[len(tais) - 1]
-			tai_elmnts = tai.split(' ')
-			tac = int(tai_elmnts[0])
-			tac_lb = tac % 256
-			tac_hb = tac // 256
-			mme_conf_file.write('    {ID="tac-lb' + str(format(tac_lb, '02x')) +
+				tai = tais[len(tais) - 1]
+				tai_elmnts = tai.split(' ')
+				tac = int(tai_elmnts[0])
+				tac_lb = tac % 256
+				tac_hb = tac // 256
+				mme_conf_file.write('	{ID="tac-lb' + str(format(tac_lb, '02x')) +
 							'.tac-hb' + str(format(tac_hb, '02x')) +
 							'.tac.epc.mnc' + self.mnc +
 							'.mcc' + self.mcc +
@@ -453,7 +454,7 @@ while len(argvs) > 1:
 		myMME.mme_s1c_name = matchReg.group(1)
 	elif re.match('^\-\-mme_s10_IP=(.+)$', myArgv, re.IGNORECASE):
 		matchReg = re.match('^\-\-mme_s10_IP=(.+)$', myArgv, re.IGNORECASE)
-		myMME.mme_s10_IP = matchReg.group(1)
+		myMME.mme_s10_IP = ipaddress.ip_address(matchReg.group(1))
 	elif re.match('^\-\-mme_s10_name=(.+)$', myArgv, re.IGNORECASE):
 		matchReg = re.match('^\-\-mme_s10_name=(.+)$', myArgv, re.IGNORECASE)
 		myMME.mme_s10_name = matchReg.group(1)
