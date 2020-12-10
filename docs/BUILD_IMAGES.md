@@ -82,7 +82,7 @@ oai-hss                 production             5b277bf98abe        1 minute ago 
 
 ```bash
 $ docker build --target oai-hss --tag oai-hss:production \
-               --file component/oai-hss/docker/Dockerfile.centos8 .
+               --file component/oai-hss/docker/Dockerfile.centos8 component/oai-hss
 $ docker image prune --force
 $ docker image ls
 oai-hss                 production             5fa77e2b6b94        1 minute ago          517MB
