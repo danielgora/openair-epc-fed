@@ -181,6 +181,7 @@ class mmeConfigGen():
 		mme_conf_file.write('  };\n')
 		mme_conf_file.write('  WRR_LIST_SELECTION = (\n')
 		previous_tac = 0
+		mnc = int(self.mnc)
 		for tai in tais[ 0:len(tais)-1 ]:
 			tai_elmnts = tai.split(' ')
 			tac = int(tai_elmnts[0])
@@ -189,7 +190,7 @@ class mmeConfigGen():
 				tac_hb = tac // 256
 				mme_conf_file.write('    {ID="tac-lb' + str(format(tac_lb, '02x')) +
 						'.tac-hb' + str(format(tac_hb, '02x')) +
-						'.tac.epc.mnc' + self.mnc +
+						'.tac.epc.mnc' + str(format(mnc, '03d')) +
 						'.mcc' + self.mcc +
 						'.3gppnetwork.org" ; SGW_IP_ADDRESS_FOR_S11="' +
 						str(self.spgwc0_s11_IP) + '";},\n')
@@ -201,7 +202,7 @@ class mmeConfigGen():
 		tac_hb = tac // 256
 		mme_conf_file.write('    {ID="tac-lb' + str(format(tac_lb, '02x')) +
 						'.tac-hb' + str(format(tac_hb, '02x')) +
-						'.tac.epc.mnc' + self.mnc +
+						'.tac.epc.mnc' + str(format(mnc, '03d')) +
 						'.mcc' + self.mcc +
 						'.3gppnetwork.org" ; SGW_IP_ADDRESS_FOR_S11="' +
 						str(self.spgwc0_s11_IP) +'";}\n')
