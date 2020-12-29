@@ -132,7 +132,7 @@ deploy_hss() {
             --from_docker_file
     run_with_echo docker cp ./hss-cfg.sh oai-hss:/openair-hss/scripts
     run_with_echo docker exec -it oai-hss /bin/bash -c \
-            "cd /openair-hss/scripts && chmod 777 hss-cfg.sh && ./hss-cfg.sh > hss_deploy.log"
+            "cd /openair-hss/scripts && chmod 777 hss-cfg.sh && ./hss-cfg.sh > hss_deploy.log 2>&1"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -187,7 +187,7 @@ deploy_mme() {
             --from_docker_file
     run_with_echo docker cp ./mme-cfg.sh oai-mme:/openair-mme/scripts
     run_with_echo docker exec -it oai-mme /bin/bash -c \
-            "cd /openair-mme/scripts && chmod 777 mme-cfg.sh && ./mme-cfg.sh > mme_deploy.log"
+            "cd /openair-mme/scripts && chmod 777 mme-cfg.sh && ./mme-cfg.sh > mme_deploy.log 2>&1"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -227,7 +227,7 @@ deploy_spgwc() {
     run_with_echo docker exec -it oai-spgwc /bin/bash -c "mkdir -p /openair-spgwc/scripts"
     run_with_echo docker cp ./spgwc-cfg.sh oai-spgwc:/openair-spgwc/scripts
     run_with_echo docker exec -it oai-spgwc /bin/bash -c \
-            "cd /openair-spgwc/scripts && chmod 777 spgwc-cfg.sh && ./spgwc-cfg.sh > spgwc_deploy.log"
+            "cd /openair-spgwc/scripts && chmod 777 spgwc-cfg.sh && ./spgwc-cfg.sh > spgwc_deploy.log 2>&1"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -265,7 +265,7 @@ deploy_spgwu-tiny() {
     run_with_echo docker exec -it oai-spgwu-tiny /bin/bash -c "mkdir -p /openair-spgwu-tiny/scripts"
     run_with_echo docker cp ./spgwu-cfg.sh oai-spgwu-tiny:/openair-spgwu-tiny/scripts
     run_with_echo docker exec -it oai-spgwu-tiny /bin/bash -c \
-            "cd /openair-spgwu-tiny/scripts && chmod 777 spgwu-cfg.sh && ./spgwu-cfg.sh > spgwu-tiny_deploy.log"
+            "cd /openair-spgwu-tiny/scripts && chmod 777 spgwu-cfg.sh && ./spgwu-cfg.sh > spgwu-tiny_deploy.log 2>&1"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
