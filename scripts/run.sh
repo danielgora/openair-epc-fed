@@ -47,11 +47,27 @@ case $1 in
     ;;
     *)
         echo "$0 [build | run | logs | configs | pcap | stop]"
-        echo "build [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
-        echo "logs [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
-        echo "configs [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
-        echo "pcap [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "start [ cassandra | hss | mme | spgwc | spgwu-tiny ]"
+        echo "   Deploy and run selected EPC network elements (default=all)"
+        echo
         echo "stop [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "   Stop selected EPC network element (default=all)"
+        echo
+        echo "build [ cassandra | hss | mme | spgwc | spgwu-tiny ]"
+        echo "   Build Docker image for selected network elements (default=all)"
+        echo
+        echo "logs [ hss | mme | spgwc | spgwu-tiny ]"
+        echo "   Retrieve and show deployment and runtime log "
+        echo "   from selected element (default=all)"
+        echo
+        echo "configs [ hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "   Retrieve and show configuration files "
+        echo "   from selected element (default=all)"
+        echo
+        echo "pcap [ hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "   Retrieve and show wireshark pcap files "
+        echo "   from selected element (default=all)"
+        echo
         exit 1
     ;;
 esac
