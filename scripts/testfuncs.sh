@@ -24,14 +24,14 @@ remove_docker_net() {
 }
 
 create_docker_net() {
-    if docker network ls | egrep "oai-public-net|oai-private-net" >/dev/null 2>&1
-    then
-        remove_docker_net
-    fi
     echo
     echo "======================"
     echo "Creating Docker Networks"
     echo "======================"
+    if docker network ls | egrep "oai-public-net|oai-private-net" >/dev/null 2>&1
+    then
+        return 0
+    fi
     if ! run_with_echo docker network create --attachable --subnet $PUBLIC_NETWORK_RANGE \
                              --ip-range $PUBLIC_NETWORK_RANGE oai-public-net
     then
@@ -51,7 +51,7 @@ create_docker_net() {
 # arg1 type (hss/mme/spgwc/spgwu-tiny)
 # arg2 tag
 find_image_tag() {
-        if ! docker image inspect oai-$1:$2
+        if ! docker image inspect oai-$1:$2 > /dev/null 2>&1
         then
             echo "Error: Docker image oai-$1:$2 does not exist!"
             echo "Specify the correct tag with the --tag option"
@@ -372,7 +372,7 @@ start_bin() {
                     "nohup ./bin/oai_spgwc -o -c ./etc/spgw_c.conf > spgwc_run.log 2>&1"
             sleep 2
         ;;
-        sgpwu-tiny)
+        spgwu-tiny)
             run_with_echo docker exec -d oai-spgwu-tiny /bin/bash -c \
                     "nohup ./bin/oai_spgwu -o -c ./etc/spgw_u.conf > spgwu-tiny_run.log 2>&1"
             sleep 2
