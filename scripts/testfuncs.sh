@@ -146,7 +146,7 @@ deploy_mme() {
     echo "======================"
     # Ensure that SCTP is installed in the kernel in the docker host system.
     # It's required for MME
-    if ! sudo modprobe sctp
+    if ! run_with_echo sudo modprobe sctp
     then
         echo "Error: Failed to install SCTP kernel module!"
         echo "Ensure that SCTP is installed in this host system!"
@@ -323,6 +323,7 @@ stop_bin() {
     elms=${@:-"cassandra hss mme spgwc spgwu-tiny"}
     for t in $elms
     do
+        echo "Stopping oai-${t}..."
         docker rm -f oai-$t 2>/dev/null
     done
 }
