@@ -23,6 +23,10 @@ create_docker_net() {
     echo "======================"
     echo "Creating Docker Networks"
     echo "======================"
+    # Ensure that all traffic is forwarded to the containers from the outside world...
+    # ZZZ: Probably should lock this down better...
+    run_with_echo sudo sysctl net.ipv4.conf.all.forwarding=1
+    run_with_echo sudo iptables -P FORWARD ACCEPT
     if docker network ls | egrep "oai-public-net|oai-private-net"
     then
         return 0
