@@ -396,7 +396,7 @@ get_logs() {
     elms=${@:-"hss mme spgwc spgwu-tiny"}
     for t in $elms
     do
-        docker cp oai-${t}:/openair-${t}/${t}_deploy.log $LOGFILE_DIR
+        docker cp oai-${t}:/openair-${t}/scripts/${t}_deploy.log $LOGFILE_DIR
         docker cp oai-${t}:/openair-${t}/${t}_run.log $LOGFILE_DIR
         echo "${t} Deploy logfile"
         echo "======"
