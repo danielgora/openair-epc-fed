@@ -23,7 +23,7 @@ create_docker_net() {
     echo "======================"
     echo "Creating Docker Networks"
     echo "======================"
-    if docker network ls | egrep "oai-public-net|oai-private-net" >/dev/null 2>&1
+    if docker network ls | egrep "oai-public-net|oai-private-net"
     then
         return 0
     fi
@@ -398,11 +398,15 @@ get_logs() {
     do
         docker cp oai-${t}:/openair-${t}/scripts/${t}_deploy.log $LOGFILE_DIR
         docker cp oai-${t}:/openair-${t}/${t}_run.log $LOGFILE_DIR
-        echo "${t} Deploy logfile"
-        echo "======"
+        echo
+        echo "==================="
+        echo "${t} Deploy Logfile"
+        echo "==================="
         cat $LOGFILE_DIR/${t}_deploy.log
-        echo "${t} Runtime logfile"
-        echo "======"
+        echo
+        echo "==================="
+        echo "${t} Runtime Logfile"
+        echo "==================="
         cat $LOGFILE_DIR/${t}_run.log
     done
     popd > /dev/null 2>&1
