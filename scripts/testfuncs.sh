@@ -137,7 +137,7 @@ deploy_hss() {
             --from_docker_file
     run_with_echo docker cp ./hss-cfg.sh oai-hss:/openair-hss/scripts
     run_with_echo docker exec -it oai-hss /bin/bash -c \
-            "cd /openair-hss/scripts && chmod 777 hss-cfg.sh && ./hss-cfg.sh" > $HSS_LOGFILE
+            "cd /openair-hss/scripts && chmod 777 hss-cfg.sh && ./hss-cfg.sh > $HSS_LOGFILE"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -192,7 +192,7 @@ deploy_mme() {
             --from_docker_file
     run_with_echo docker cp ./mme-cfg.sh oai-mme:/openair-mme/scripts
     run_with_echo docker exec -it oai-mme /bin/bash -c \
-            "cd /openair-mme/scripts && chmod 777 mme-cfg.sh && ./mme-cfg.sh" > $MME_LOGFILE
+            "cd /openair-mme/scripts && chmod 777 mme-cfg.sh && ./mme-cfg.sh > $MME_LOGFILE"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -232,7 +232,7 @@ deploy_spgwc() {
     run_with_echo docker exec -it oai-spgwc /bin/bash -c "mkdir -p /openair-spgwc/scripts"
     run_with_echo docker cp ./spgwc-cfg.sh oai-spgwc:/openair-spgwc/scripts
     run_with_echo docker exec -it oai-spgwc /bin/bash -c \
-            "cd /openair-spgwc/scripts && chmod 777 spgwc-cfg.sh && ./spgwc-cfg.sh" > $SPGWC_LOGFILE
+            "cd /openair-spgwc/scripts && chmod 777 spgwc-cfg.sh && ./spgwc-cfg.sh > $SPGWC_LOGFILE"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -270,7 +270,7 @@ deploy_spgwu-tiny() {
     run_with_echo docker exec -it oai-spgwu-tiny /bin/bash -c "mkdir -p /openair-spgwu-tiny/scripts" > $SPGWC_LOGFILE
     run_with_echo docker cp ./spgwu-cfg.sh oai-spgwu-tiny:/openair-spgwu-tiny/scripts
     run_with_echo docker exec -it oai-spgwu-tiny /bin/bash -c \
-            "cd /openair-spgwu-tiny/scripts && chmod 777 spgwu-cfg.sh && ./spgwu-cfg.sh" > $SPGWU_LOGFILE
+            "cd /openair-spgwu-tiny/scripts && chmod 777 spgwu-cfg.sh && ./spgwu-cfg.sh > $SPGWU_LOGFILE"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -401,6 +401,7 @@ get_logs() {
     elms=${@:-"hss mme spgwc spgwu-tiny"}
     for t in $elms
     do
+        docker cp oai-${t}:/openair-${t}/${t}_deploy.log $LOGFILE_DIR
         docker cp oai-${t}:/openair-${t}/${t}_run.log $LOGFILE_DIR
         echo "${t} Deploy logfile"
         echo "======"
