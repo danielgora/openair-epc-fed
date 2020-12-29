@@ -22,12 +22,14 @@ case $1 in
         start_trace $@
         start_bin $@
         get_configs $@
+        echo
         echo "======================"
         echo "OAI-EPC started $@!"
         echo "Run:"
         echo "$0 logs $@"
         echo "to show the logs..."
         echo "======================"
+        echo
     ;;
     stop)
         shift
