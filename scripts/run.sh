@@ -46,7 +46,7 @@ case $1 in
         get_pcap $@
     ;;
     *)
-        echo "$0 [build | run | logs | configs | pcap | stop]"
+        echo "$0 [start | stop | build | logs | configs | pcap]"
         echo "start [ cassandra | hss | mme | spgwc | spgwu-tiny ]"
         echo "   Deploy and run selected EPC network elements (default=all)"
         echo

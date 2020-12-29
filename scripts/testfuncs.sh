@@ -355,7 +355,7 @@ start_bin() {
     elms=${@:-"hss mme spgwc spgwu-tiny"}
     for t in $elms
     do
-        case $t
+        case $t in
         hss)
             # Start the binaries
             run_with_echo docker exec -d oai-hss /bin/bash -c \
