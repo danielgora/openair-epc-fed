@@ -3,12 +3,6 @@
 TOP_DIR=$(git rev-parse --show-toplevel)
 source $TOP_DIR/scripts/params.sh
 
-# Docker tag for OAI EPC images
-tag=production
-
-# Find the top level directory of OAI-EPC-fed
-TOP_DIR=$(git rev-parse --show-toplevel)
-
 LOGFILE_DIR=$TOP_DIR/archives
 CASS_LOGFILE=$LOGFILE_DIR/cassandra_deploy.log
 HSS_LOGFILE=$LOGFILE_DIR/hss_deploy.log
@@ -112,7 +106,19 @@ deploy_hss() {
     echo "======================"
     echo "Deploying HSS"
     echo "======================"
-    [[ $(find_image_tag hss $tag) ]] || return 1
+    if ! find_image_tag hss $tag
+    then
+        read -p "OAI-HSS tag $tag not found.  Do you want to build the image? (y/n)" rsp
+        rsp=${rsp:-"y"}
+        if [ "y" == "$rsp" ]
+        then
+            if ! build hss
+            then
+                return 1
+            fi
+        fi
+    fi
+
     # SDB to Cassandra will be on `eth0`
     # S6A to MME will be on `eth1`
     run_with_echo docker run --privileged --name oai-hss --network oai-private-net --ip $HSS_DBN_ADDR \
@@ -143,7 +149,26 @@ deploy_mme() {
     echo "======================"
     echo "Deploying MME"
     echo "======================"
-    [[ $(find_image_tag mme $tag) ]] || return 1
+    # Ensure that SCTP is installed in the kernel in the docker host system.
+    # It's required for MME
+    if ! sudo modprobe sctp
+    then
+        echo "Error: Failed to install SCTP kernel module!"
+        echo "Ensure that SCTP is installed in this host system!"
+        exit 1
+    fi
+    if ! find_image_tag mme $tag
+    then
+        read -p "OAI-MME tag $tag not found.  Do you want to build the image? (y/n)" rsp
+        rsp=${rsp:-"y"}
+        if [ "y" == "$rsp" ]
+        then
+            if ! build mme
+            then
+                return 1
+            fi
+        fi
+    fi
     # SDB to Cassandra will be on `eth0`
     # S6A to MME will be on `eth1`
     run_with_echo docker run --privileged --name oai-mme --network oai-public-net --ip $MME_PUBLIC_ADDR \
@@ -179,7 +204,18 @@ deploy_spgwc() {
     echo "======================"
     echo "Deploying SPGW-C"
     echo "======================"
-    [[ $(find_image_tag spgwc $tag) ]] || return 1
+    if ! find_image_tag spgwc $tag
+    then
+        read -p "OAI-SPGWC tag $tag not found.  Do you want to build the image? (y/n)" rsp
+        rsp=${rsp:-"y"}
+        if [ "y" == "$rsp" ]
+        then
+            if ! build spgwc
+            then
+                return 1
+            fi
+        fi
+    fi
     # SDB to Cassandra will be on `eth0`
     # S6A to MME will be on `eth1`
     run_with_echo docker run --privileged --name oai-spgwc --network oai-public-net --ip $SPGWC_PUBLIC_ADDR \
@@ -202,13 +238,24 @@ deploy_spgwc() {
     return $ret
 }
 
-deploy_spgwu() {
+deploy_spgwu-tiny() {
     pushd $TOP_DIR > /dev/null 2>&1
     echo
     echo "======================"
     echo "Deploying SPGW-U"
     echo "======================"
-    [[ $(find_image_tag spgwu-tiny $tag) ]] || return 1
+    if ! find_image_tag spgwu-tiny $tag
+    then
+        read -p "OAI-SPGWU-tiny tag $tag not found.  Do you want to build the image? (y/n)" rsp
+        rsp=${rsp:-"y"}
+        if [ "y" == "$rsp" ]
+        then
+            if ! build spgwu-tiny
+            then
+                return 1
+            fi
+        fi
+    fi
     # SDB to Cassandra will be on `eth0`
     # S6A to MME will be on `eth1`
     run_with_echo docker run --privileged --name oai-spgwu-tiny --network oai-public-net --ip $SPGWU_PUBLIC_ADDR \
@@ -235,7 +282,7 @@ build() {
     pushd $TOP_DIR > /dev/null 2>&1
     local elms
     local target
-    elms=${*:-"hss mme spgwc spgwu-tiny"}
+    elms=${@:-"hss mme spgwc spgwu-tiny"}
     for target in $elms
     do
         if ! docker build --target oai-$target \
@@ -251,6 +298,9 @@ build() {
 }
 
 deploy() {
+    local elms
+    local t
+
     if [ ! -d $LOGFILE_DIR ]
     then
         echo "Creating log file directory $LOGFILE_DIR"
@@ -261,39 +311,34 @@ deploy() {
     then
         exit 1
     fi
-    if ! deploy_cassandra
-    then
-        exit 1
-    fi
-    if ! deploy_hss
-    then
-        exit 1
-    fi
-    if ! deploy_mme
-    then
-        exit 1
-    fi
-    if ! deploy_spgwc
-    then
-        exit 1
-    fi
-    if ! deploy_spgwu
-    then
-        exit 1
-    fi
+
+    elms=${@:-"cassandra hss mme spgwc spgwu-tiny"}
+    for t in $elms
+    do
+        if ! deploy_${t}
+        then
+            exit 1
+        fi
+    done
 }
 
-stop_all() {
-    for t in cassandra hss mme spgwc spgwu-tiny
+stop_bin() {
+    local elms
+    local t
+    elms=${@:-"cassandra hss mme spgwc spgwu-tiny"}
+    for t in $elms
     do
-        docker rm -f oai-$t
+        docker rm -f oai-$t 2>/dev/null
     done
 }
 
 # Start tcpdump on all the containers.
 start_trace() {
     pushd $TOP_DIR > /dev/null 2>&1
-    for t in hss mme spgwc spgwu-tiny
+    local elms
+    local t
+    elms=${@:-"hss mme spgwc spgwu-tiny"}
+    for t in $elms
     do
         docker exec -d oai-$t /bin/bash -c "nohup tcpdump -i any -w /tmp/${t}.pcap 2>&1 > /dev/null"
     done
@@ -305,25 +350,43 @@ start_bin() {
     echo "======================"
     echo "Starting OAI EPC elements"
     echo "======================"
-    # Start the binaries
-    run_with_echo docker exec -d oai-hss /bin/bash -c \
-            "nohup ./bin/oai_hss -j ./etc/hss_rel14.json --reloadkey true > hss_check_run.log 2>&1"
-    sleep 2
-    run_with_echo docker exec -d oai-mme /bin/bash -c \
-            "nohup ./bin/oai_mme -c ./etc/mme.conf > mme_check_run.log 2>&1"
-    sleep 2
-    run_with_echo docker exec -d oai-spgwc /bin/bash -c \
-            "nohup ./bin/oai_spgwc -o -c ./etc/spgw_c.conf > spgwc_check_run.log 2>&1"
-    sleep 2
-    run_with_echo docker exec -d oai-spgwu-tiny /bin/bash -c \
-            "nohup ./bin/oai_spgwu -o -c ./etc/spgw_u.conf > spgwu-tiny_check_run.log 2>&1"
-    sleep 2
+    local elms
+    local t
+    elms=${@:-"hss mme spgwc spgwu-tiny"}
+    for t in $elms
+    do
+        case $t
+        hss)
+            # Start the binaries
+            run_with_echo docker exec -d oai-hss /bin/bash -c \
+                    "nohup ./bin/oai_hss -j ./etc/hss_rel14.json --reloadkey true > hss_run.log 2>&1"
+            sleep 2
+        ;;
+        mme)
+            run_with_echo docker exec -d oai-mme /bin/bash -c \
+                    "nohup ./bin/oai_mme -c ./etc/mme.conf > mme_run.log 2>&1"
+            sleep 2
+        ;;
+        spgwc)
+            run_with_echo docker exec -d oai-spgwc /bin/bash -c \
+                    "nohup ./bin/oai_spgwc -o -c ./etc/spgw_c.conf > spgwc_run.log 2>&1"
+            sleep 2
+        ;;
+        sgpwu-tiny)
+            run_with_echo docker exec -d oai-spgwu-tiny /bin/bash -c \
+                    "nohup ./bin/oai_spgwu -o -c ./etc/spgw_u.conf > spgwu-tiny_run.log 2>&1"
+            sleep 2
+        ;;
+        esac
+    done
 }
 
 get_configs() {
     pushd $TOP_DIR > /dev/null 2>&1
+    local elms
     local t
-    for t in hss mme spgwc spgwu-tiny
+    elms=${@:-"hss mme spgwc spgwu-tiny"}
+    for t in $elms
     do
         mkdir -p $LOGFILE_DIR/${t}-cfg
         docker cp oai-${t}:/openair-${t}/etc/. $LOGFILE_DIR/${t}-cfg
@@ -335,16 +398,16 @@ get_logs() {
     pushd $TOP_DIR > /dev/null 2>&1
     local elms
     local t
-    elms=${*:-"hss mme spgwc spgwu-tiny"}
+    elms=${@:-"hss mme spgwc spgwu-tiny"}
     for t in $elms
     do
-        docker cp oai-${t}:/openair-${t}/${t}_check_run.log $LOGFILE_DIR
+        docker cp oai-${t}:/openair-${t}/${t}_run.log $LOGFILE_DIR
         echo "${t} Deploy logfile"
         echo "======"
         cat $LOGFILE_DIR/${t}_deploy.log
         echo "${t} Runtime logfile"
         echo "======"
-        cat $LOGFILE_DIR/${t}_check_run.log
+        cat $LOGFILE_DIR/${t}_run.log
     done
     popd > /dev/null 2>&1
 }
@@ -352,7 +415,8 @@ get_logs() {
 get_pcap() {
     pushd $TOP_DIR > /dev/null 2>&1
     local elms
-    elms=${*:-"hss mme spgwc spgwu-tiny"}
+    local t
+    elms=${@:-"hss mme spgwc spgwu-tiny"}
     for t in $elms
     do
         echo "Getting $t pcap file"

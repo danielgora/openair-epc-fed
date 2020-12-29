@@ -10,39 +10,48 @@ source $TOP_DIR/scripts/testfuncs.sh
 case $1 in
     build)
         shift
-        build $*
+        build $@
     ;;
     deploy)
-        deploy_$2
+        shift
+        deploy $@
     ;;
     start | run)
-        deploy
-        start_trace
-        start_bin
-        get_configs
+        shift
+        deploy $@
+        start_trace $@
+        start_bin $@
+        get_configs $@
         echo "======================"
-        echo "OAI-EPC started successfully!"
-        echo "Run $0 logs to show logs from each element..."
+        echo "OAI-EPC started $@!"
+        echo "Run:"
+        echo "$0 logs $@"
+        echo "to show the logs..."
         echo "======================"
     ;;
     stop)
-        stop_all
+        shift
+        stop_bin $@
     ;;
     logs)
-        get_logs
+        shift
+        get_logs $@
     ;;
     configs)
-        get_configs
+        shift
+        get_configs $@
     ;;
     pcap)
-        get_pcap
+        shift
+        get_pcap $@
     ;;
     *)
         echo "$0 [build | run | logs | configs | pcap | stop]"
-        echo "build: [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
-        echo "logs: [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
-        echo "configs: [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
-        echo "pcap: [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "build [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "logs [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "configs [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "pcap [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
+        echo "stop [ cassandra | hss | mme | spgwc | spgwu-tiny ] (default=all)"
         exit 1
     ;;
 esac

@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Docker tag for OAI EPC images
+tag=production
+
 # EPC Docker Test Network parameters
 PRIVATE_NETWORK_RANGE='192.168.68.0/26'
 PUBLIC_NETWORK_RANGE='192.168.61.192/26'
