@@ -4,11 +4,6 @@ TOP_DIR=$(git rev-parse --show-toplevel)
 source $TOP_DIR/scripts/params.sh
 
 LOGFILE_DIR=$TOP_DIR/archives
-CASS_LOGFILE=$LOGFILE_DIR/cassandra_deploy.log
-HSS_LOGFILE=$LOGFILE_DIR/hss_deploy.log
-MME_LOGFILE=$LOGFILE_DIR/mme_deploy.log
-SPGWC_LOGFILE=$LOGFILE_DIR/spgwc_deploy.log
-SPGWU_LOGFILE=$LOGFILE_DIR/spgwu-tiny_deploy.log
 
 run_with_echo() {
     echo $@
@@ -84,7 +79,7 @@ deploy_cassandra() {
         echo "Waiting for Cassandra DB to start..."
         sleep 1
     done
-    docker exec -it oai-cassandra /bin/bash -c "nodetool status" | tee $CASS_LOGFILE
+    docker exec -it oai-cassandra /bin/bash -c "nodetool status"
     run_with_echo docker cp component/oai-hss/src/hss_rel14/db/oai_db.cql oai-cassandra:/home
     sleep 3
     run_with_echo docker exec -it oai-cassandra /bin/bash -c "cqlsh --file /home/oai_db.cql $CASS_IP_ADDR"
@@ -137,7 +132,7 @@ deploy_hss() {
             --from_docker_file
     run_with_echo docker cp ./hss-cfg.sh oai-hss:/openair-hss/scripts
     run_with_echo docker exec -it oai-hss /bin/bash -c \
-            "cd /openair-hss/scripts && chmod 777 hss-cfg.sh && ./hss-cfg.sh > $HSS_LOGFILE"
+            "cd /openair-hss/scripts && chmod 777 hss-cfg.sh && ./hss-cfg.sh > hss_deploy.log"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -192,7 +187,7 @@ deploy_mme() {
             --from_docker_file
     run_with_echo docker cp ./mme-cfg.sh oai-mme:/openair-mme/scripts
     run_with_echo docker exec -it oai-mme /bin/bash -c \
-            "cd /openair-mme/scripts && chmod 777 mme-cfg.sh && ./mme-cfg.sh > $MME_LOGFILE"
+            "cd /openair-mme/scripts && chmod 777 mme-cfg.sh && ./mme-cfg.sh > mme_deploy.log"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -232,7 +227,7 @@ deploy_spgwc() {
     run_with_echo docker exec -it oai-spgwc /bin/bash -c "mkdir -p /openair-spgwc/scripts"
     run_with_echo docker cp ./spgwc-cfg.sh oai-spgwc:/openair-spgwc/scripts
     run_with_echo docker exec -it oai-spgwc /bin/bash -c \
-            "cd /openair-spgwc/scripts && chmod 777 spgwc-cfg.sh && ./spgwc-cfg.sh > $SPGWC_LOGFILE"
+            "cd /openair-spgwc/scripts && chmod 777 spgwc-cfg.sh && ./spgwc-cfg.sh > spgwc_deploy.log"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
@@ -267,10 +262,10 @@ deploy_spgwu-tiny() {
             --network_ue_ip="12.0.0.0/24" \
             --network_ue_nat_option="yes" \
             --from_docker_file
-    run_with_echo docker exec -it oai-spgwu-tiny /bin/bash -c "mkdir -p /openair-spgwu-tiny/scripts" > $SPGWC_LOGFILE
+    run_with_echo docker exec -it oai-spgwu-tiny /bin/bash -c "mkdir -p /openair-spgwu-tiny/scripts"
     run_with_echo docker cp ./spgwu-cfg.sh oai-spgwu-tiny:/openair-spgwu-tiny/scripts
     run_with_echo docker exec -it oai-spgwu-tiny /bin/bash -c \
-            "cd /openair-spgwu-tiny/scripts && chmod 777 spgwu-cfg.sh && ./spgwu-cfg.sh > $SPGWU_LOGFILE"
+            "cd /openair-spgwu-tiny/scripts && chmod 777 spgwu-cfg.sh && ./spgwu-cfg.sh > spgwu-tiny_deploy.log"
     ret=$?
     popd > /dev/null 2>&1
     return $ret
